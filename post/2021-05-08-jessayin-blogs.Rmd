@@ -1,0 +1,29 @@
+---
+title: Jessayin- Blogs
+author: ''
+date: '2021-05-08'
+slug: jessayin-blogs
+categories: []
+tags: []
+description: ''
+---
+
+[Link to project 1](/project/project1/)
+
+[Link to google](https://www.google.com)
+
+```{r}
+summary(iris)
+
+```
+
+```{python}
+
+list1=[1,2,3,4]
+list2=['a','b','c','d']
+list1[0]
+
+```
+
+![](/img/japanese-flying-squirrel-keishiro-shin_3-630x4201.jpg)
+ 

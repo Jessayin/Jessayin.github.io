@@ -1,0 +1,93 @@
+---
+title: "Project 1"
+author: "Jessica Selim"
+date: "4/4/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F,
+tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
+```
+
+## Project 1
+
+The first data-set I chose was about the gun murder rate and gun ownership rate per the population in different states. This dataset explains how many homocides occur due to gun violence and compares it to the proportion of gun ownership in that state to understand if regal gun ownership has a correlation with the violence. The second data-set about the states in terms of state region, population number, Verbal SAT score, Math SAT score and percent of SAT takers and the amount of money the education system receives and the average pay of high school teachers. This data-set displays the relationships between the money in education and its faculty and resulting score/success of their students. 
+
+I chose these data-sets because I wanted to understand if there was a relationship between gun violence and education pay and average student success of a state. This data-set entailed all those components and the topic of gun reform is such a hot debate that it seemed like an interesting project to work on. 
+
+```{r cars}
+library(tidyverse)
+Gun <- read_csv("~/gun_violence_us.csv")
+States <- read_csv("~/Book3.csv") 
+```
+
+
+For the data-sets, I used left-join to join the data-sets. I decided on left join because I wanted to keep all my data-sets for "Gun" and remove the excess data points in "States" that is not in Gun. With this merge, I lost "CN" and "DC" because neither of the two were in the Gun data-set but were in States and this merge kept me from having uncollected data. 
+
+```{r pressure, echo=FALSE}
+
+Fdata <- Gun %>% left_join(States, by=c("state"="X1")) %>% rename("GMR"="mortality_rate") %>% 
+  rename("GOR"="ownership_rate") %>% rename("Population"="pop") %>% rename("MSAT"="SATM") %>% 
+  rename("VSAT"="SATV") %>% rename("PSAT"="percent") %>% rename("ESpending"="dollars") %>%
+  rename("AvgSalary"="pay")
+
+setdiff(States$X1, Gun$state)
+
+```
+
+The mean, standard deviation, maximum value, minimum value and distinct values for every numeric variable for GOR, GMR, ESpending, AvgSalary, PSAT, VSAT, LSAT, MSAt and population all over America was calculated using summarize_all(). After deselecting state and region, the mean, standard deviation, minimum, median and maximum values of all variables were calculated. Then, the dataset was tidied by separating every numeric category from their respective calculations and then pivoted widely to display it all in a easily legible manner. Then, using the mutate function, variance was created via squaring the Sd value. Lastly, they were arranged in descending order by mean variance. This data-set gives a good picture of the Gun rates and the education data for all of America. 
+ 
+Next, grouping the data by region and deselecting state, the same mean, standard deviation, minimum, median and maximum values of all variables were calculated via summarize_all. After tidying the data and arranging via descending GMR_Mean. From this dataset, each region's stats can be displayed and based on the ascending order, it can be seen that region ESC has the highest GMR average. Lastly, using the results from the previous set, I grouped the data by state and region and filtered out for ESC region and found the same mean, standard deviation, minimum, median and maximum values of all variables and arranged by ascending GMR_max and found that MS has the highest GMR value at 18. I did the same thing to see the trend with average salary and AR seemed to have had the lowest avgerage salary. 
+
+
+```{r}
+
+Fdata %>% select(-"state", -"region") %>% summarise_all(list(Min=min, Mean=mean, Max=max, Sd=sd, Median=median)) %>% pivot_longer(contains("_")) %>% separate(name,into=c("Category","Statistics")) %>% pivot_wider(names_from="Statistics", values_from="value") %>% mutate(Variance=Sd^2) %>% arrange(Variance)
+
+Fdata %>% group_by(region) %>% select(-"state") %>% summarise_all(list(Min=min, Mean=mean, Max=max, Sd=sd, Median=median)) %>% pivot_longer(contains("_")) %>% pivot_wider(names_from="name", values_from="value") %>% arrange(-GMR_Mean)
+
+
+Fdata %>% group_by(region) %>% group_by(state) %>% filter(region=="ESC") %>% summarise_all(list(Max=max, Mean=mean, Min=min, Sd=sd, Median=median)) %>% arrange(-GMR_Max) %>% select(1:10)
+
+Fdata %>% group_by(region) %>% select(-"state") %>% summarise_all(list(Min=min, Mean=mean, Max=max, Sd=sd, Median=median)) %>% pivot_longer(contains("_")) %>% pivot_wider(names_from="name", values_from="value") %>% arrange(AvgSalary_Mean)
+
+Fdata %>% group_by(region) %>% group_by(state) %>% filter(region=="WSC") %>% summarise_all(list(Max=max, Mean=mean, Min=min, Sd=sd, Median=median)) %>% arrange(AvgSalary_Min) %>% select(1:10)
+```
+Three separate plots were created. Plot 1 was the heat plot that demonstrated areas of high clustering between the variables. In this case, the most interesting clusterings was the heavy clustering between VSAT and MSAT. Mostly everything else ranged around the -0.4 to -0.5 region. The next plot showed the average spending and state grouped off my region. In this plot, more of the highest averaging salaries were seen in region MA with the highest being in NJ. The lowest is trending around region WSC or MTN with the lowest being in UT. Lastly, a plot of relationship of gun murder rate and average salary grouped off by region was created. This plot demonstrated a rather variable positive and negative relationship throughout various regions. This was rather interesting because I was expecting to see an undeniable downward trend of average salary with an upward trend of Gun Murder Rate. The same plot for gun murder rate and Math Sat scores showed the same variable positive and negative trend but for the most part it seemed relatively stagnant across gun violence.
+
+
+```{r}
+Fdata %>% select_if(is.numeric) %>% cor(use="complete.obs") %>% as.data.frame %>%  rownames_to_column %>% pivot_longer(-1) %>%  ggplot(aes(rowname,name,fill=value))+geom_tile()+  geom_text(aes(label=round(value,2)))+  xlab("")+ylab("")+coord_fixed()+ scale_fill_gradient2(low="light blue",mid="light pink",high="light green") + theme(axis.text.x = element_text(size=7, angle=90))
+
+
+ggplot(Fdata, aes(x = state, y = ESpending, fill=region))+ geom_bar(position="dodge", stat="summary",fun="mean")+ scale_y_continuous("Average Educational Spending", breaks=seq(0,150,55)) + xlab("State") + theme(axis.text.x = element_text(size=10, angle=90)) + ggtitle("Average Educational Spending per Region") + geom_errorbar(stat="summary", fun.data=mean_se, width=1) + scale_fill_brewer(palette = "Set3")
+
+
+ggplot(data = Fdata, aes(x=GMR, y= AvgSalary)) + geom_point (aes(color=region)) + ggtitle("The Gun murder rate of regions and Avg Teacher Salary") + ylab("Avg Salary") + xlab("Gun Murder Rate") + geom_smooth(method="lm", aes(color=region)) + scale_fill_brewer(palette = "Set3")
+
+
+ggplot(data = Fdata, aes(x=GMR, y= MSAT)) + geom_point (aes(color=region)) + ggtitle("The Gun murder rate of regions and Math SAT") + ylab("Math SAT") + xlab("Gun Murder Rate") + geom_smooth(method="lm", aes(color=region)) + scale_fill_brewer(palette = "Set3")
+
+```
+
+PCA1 and PCA2 do not seem to be separate from one another based on region according to the plot of PC scores. It seems as though almost all of the regions are relatively intertwined with one another. Even with the clustering plot there was a 73.8% variability explanation. Outside of the population clusering of every category, all the distributions seemed to be fairly evenly spread across the board. 
+
+```{r}
+library(cluster)
+library(GGally)
+
+pam1 <- Fdata%>% select(-state,-region) %>% pam(k=10)
+head(pam1)
+
+plot(pam1, which=1)
+eig <- Fdata %>% select(-region,-state) %>% cor(use="complete.obs") %>% eigen()
+
+PCA <- Fdata %>% select(-region,-state) %>% scale() %*% eig$vectors
+Fdata %>% mutate(PC1=PCA[,1], PC2=PCA[,2]) %>% ggplot(aes(PC1, PC2, color=region)) + geom_point() + coord_fixed()
+
+```
+
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

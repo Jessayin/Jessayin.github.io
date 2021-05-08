@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Jessica Selim" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
+    <title>Project 2</title>
+    <meta name="generator" content="Hugo 0.83.1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../post/">BLOG</a></li>
+        
+        <li><a href="../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../project/project2/">Project 2</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         January 1, 0001 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<pre class="r"><code># LEAVE THIS CHUNK ALONE!
+library(knitr)
+opts_chunk$set(fig.align = &quot;center&quot;, fig.height = 5, message = FALSE, 
+    warning = FALSE, fig.width = 8, tidy.opts = list(width.cutoff = 60), 
+    tidy = TRUE)
+
+class_diag &lt;- function(probs, truth) {
+    
+    tab &lt;- table(factor(probs &gt; 0.5, levels = c(&quot;FALSE&quot;, &quot;TRUE&quot;)), 
+        truth)
+    acc = sum(diag(tab))/sum(tab)
+    sens = tab[2, 2]/colSums(tab)[2]
+    spec = tab[1, 1]/colSums(tab)[1]
+    ppv = tab[2, 2]/rowSums(tab)[2]
+    
+    if (is.numeric(truth) == FALSE &amp; is.logical(truth) == FALSE) 
+        truth &lt;- as.numeric(truth) - 1
+    
+    # CALCULATE EXACT AUC
+    ord &lt;- order(probs, decreasing = TRUE)
+    probs &lt;- probs[ord]
+    truth &lt;- truth[ord]
+    
+    TPR = cumsum(truth)/max(1, sum(truth))
+    FPR = cumsum(!truth)/max(1, sum(!truth))
+    
+    dup &lt;- c(probs[-1] &gt;= probs[-length(probs)], FALSE)
+    TPR &lt;- c(0, TPR[!dup], 1)
+    FPR &lt;- c(0, FPR[!dup], 1)
+    
+    n &lt;- length(TPR)
+    auc &lt;- sum(((TPR[-1] + TPR[-n])/2) * (FPR[-1] - FPR[-n]))
+    
+    data.frame(acc, sens, spec, ppv, auc)
+}</code></pre>
+<div id="project-2" class="section level2">
+<h2>Project 2</h2>
+<p><strong>0.</strong>
+The first dataset I chose measured the impact of beauty on a professor’s teaching ratings at the University of Texas at Austin from the academic years of 2000-2002. This dataset measured a total of 463 courses and indicated the professor’s gender, age, whether they are a minority or native English speaker, beauty rating, tenure and division. The course was identified by its credits, students in the evaltuation and total number of students. The purpose of this dataset is to evaluate the correlation, if any, between a professor’s evaluation by their student’s to ther beauty, gender, age and minority status.</p>
+<p>I chose these data-sets because I thought it was very interesting. As a senior at UT, I have seen some correlation between student’s perspective of a professor and their perceived attractiveness. More so, I plan on becoming a professor one day and I think it might be interesting to see how i may be perceieved by my students based on my gender, age and general attractiveness.</p>
+<pre class="r"><code>library(tidyverse)
+Teacher &lt;- read_csv(&quot;~/TeachingRatings.csv&quot;)
+glimpse(Teacher)</code></pre>
+<pre><code>## Rows: 463
+## Columns: 13
+## $ X1          &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17…
+## $ minority    &lt;chr&gt; &quot;yes&quot;, &quot;no&quot;, &quot;no&quot;, &quot;no&quot;, &quot;no&quot;, &quot;no&quot;, &quot;no&quot;, &quot;no&quot;, &quot;no&quot;, &quot;n…
+## $ age         &lt;dbl&gt; 36, 59, 51, 40, 31, 62, 33, 51, 33, 47, 35, 37, 42, 49, 3…
+## $ gender      &lt;chr&gt; &quot;female&quot;, &quot;male&quot;, &quot;male&quot;, &quot;female&quot;, &quot;female&quot;, &quot;male&quot;, &quot;fe…
+## $ credits     &lt;chr&gt; &quot;more&quot;, &quot;more&quot;, &quot;more&quot;, &quot;more&quot;, &quot;more&quot;, &quot;more&quot;, &quot;more&quot;, &quot;…
+## $ beauty      &lt;dbl&gt; 0.2899157, -0.7377322, -0.5719836, -0.6779634, 1.5097940,…
+## $ eval        &lt;dbl&gt; 4.3, 4.5, 3.7, 4.3, 4.4, 4.2, 4.0, 3.4, 4.5, 3.9, 3.1, 4.…
+## $ division    &lt;chr&gt; &quot;upper&quot;, &quot;upper&quot;, &quot;upper&quot;, &quot;upper&quot;, &quot;upper&quot;, &quot;upper&quot;, &quot;up…
+## $ native      &lt;chr&gt; &quot;yes&quot;, &quot;yes&quot;, &quot;yes&quot;, &quot;yes&quot;, &quot;yes&quot;, &quot;yes&quot;, &quot;yes&quot;, &quot;yes&quot;, &quot;…
+## $ tenure      &lt;chr&gt; &quot;yes&quot;, &quot;yes&quot;, &quot;yes&quot;, &quot;yes&quot;, &quot;yes&quot;, &quot;yes&quot;, &quot;yes&quot;, &quot;yes&quot;, &quot;…
+## $ students    &lt;dbl&gt; 24, 17, 55, 40, 42, 182, 33, 25, 48, 16, 18, 30, 28, 30, …
+## $ allstudents &lt;dbl&gt; 43, 20, 55, 46, 48, 282, 41, 41, 60, 19, 25, 34, 40, 36, …
+## $ prof        &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17…</code></pre>
+<p><strong>1.</strong>
+After running a MANOVA test to see of a professor’s beauty rating and course evaluation is different across the teacher’s gender, the results demonstrated that there is a significant effect (p=1.56e-05). This indicates that for at least beauty and evaluation, they are different with one gender from the other. Since we found a significant effect, an univariate ANOVA was conducted and determined that for for both beauty and evaluation, there were differences for gender (beauty p=0.0068, eval p=0.0012). Next, follow up t-tests were conducted and found a p value of 0.006 for genders for beauty and a p value of 0.0012 for evaluation.</p>
+<p>At the end of the MANOVA testing, I performed a total of 5 tests (2 t-tests, 2 ANOVAS and 1 MANOVA). According to my tests, the probability of at least 1 type I error should be 1-0.95^5= 0.226, however, once it is adjusted to equal 0.05/5 it is 0.01, which is significant. Despite the results being significant, it is important to take note that several MANOVA assumptions were likely violated in order to conduct this test. For instance, examination of bivariate density plots for each group revealed that my response variables are not multivariate normal thus indicating that we did not meet the assumption.</p>
+<p><img src="../../project/project2_files/figure-html/pressure-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre><code>##           female      male        
+## statistic 0.9804633   0.9711292   
+## p.value   0.008030547 3.061319e-05</code></pre>
+<pre><code>##            Df   Pillai approx F num Df den Df    Pr(&gt;F)    
+## gender      1 0.046997   11.342      2    460 1.555e-05 ***
+## Residuals 461                                              
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre><code>##  Response beauty :
+##              Df  Sum Sq Mean Sq F value   Pr(&gt;F)   
+## gender        1   4.542  4.5416  7.4033 0.006757 **
+## Residuals   461 282.806  0.6135                    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response eval :
+##              Df  Sum Sq Mean Sq F value   Pr(&gt;F)   
+## gender        1   3.186  3.1859  10.562 0.001239 **
+## Residuals   461 139.053  0.3016                    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  Teacher$beauty and Teacher$gender 
+## 
+##      female
+## male 0.0068
+## 
+## P value adjustment method: none</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  Teacher$eval and Teacher$gender 
+## 
+##      female
+## male 0.0012
+## 
+## P value adjustment method: none</code></pre>
+<pre><code>## [1] 0.2262191</code></pre>
+<pre><code>## [1] 0.01</code></pre>
+<p><strong>2.</strong>
+For this project, I conducted a randomization test to see whether or not there was a difference in mean beauty rating between minority (n=64) or Caucasian (n=399) professors.</p>
+<p>Ho= mean beauty rating is the same for minority vs. caucasion professor
+Ha= mean beauty rating is the different for minority vs. caucasion professor</p>
+<p>A randomization test of 5000 random permutations, we sampled at random from that set of permutations and so that our results are equivalent. P-value 0.4764 was computed signifying that the null hypothesis cannot be rejected indicating that the mean beauty rating is indeed same for minority and caucasian professors.</p>
+<pre class="r"><code>table(Teacher$minority)</code></pre>
+<pre><code>## 
+##  no yes 
+## 399  64</code></pre>
+<pre class="r"><code>race1 &lt;- Teacher %&gt;% group_by(minority) %&gt;% summarize(means = mean(beauty)) %&gt;% 
+    summarize(mean_diff = diff(means))
+race1</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##   mean_diff
+##       &lt;dbl&gt;
+## 1    0.0755</code></pre>
+<pre class="r"><code>rand_1 &lt;- vector()
+for (i in 1:5000) {
+    new &lt;- data.frame(beauty = sample(Teacher$beauty), minority = Teacher$minority)
+    rand_1[i] &lt;- mean(new[new$minority == &quot;yes&quot;, ]$beauty) - 
+        mean(new[new$minority == &quot;no&quot;, ]$beauty)
+}
+{
+    hist(rand_1, main = &quot;&quot;, ylab = &quot;&quot;)
+    abline(v = c(-0.07546074, 0.0754607), col = &quot;red&quot;)
+}</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-2-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>mean(rand_1 &gt; 0.07546074 | rand_1 &lt; -0.07546074)</code></pre>
+<pre><code>## [1] 0.4842</code></pre>
+<p><strong>3.</strong></p>
+<p>In order to build a linear regression model predicting course evaluation rating from the interaction of age and tenureship, the numeric variable age was mean-centered. According to the results, the mean predicted evaluation score for non-tenured professor’s with average age is 4.15. Tenured professors with averaged age ha a predicted evaluation score that is 0.196 points lower than non-tenured professors. Furthermore, for every 1-unit increase in age, predicted evaluation goes down by 0.01 points. Slope of age on evaluation for tenured is 0.009 greater than for non-tenured. Lastly, 0.024 of the variance is explained by the model.</p>
+<p>When testing for linearity and homoskedsaticity with ggplot of residual value to fitted value, the graph did not show anything too alarming. Furthermore, when tested for normality through a qqplot, my data seems relatively normal with some deviance around the top of the graph. I wanted to extra insurance of formally testing the normality through the Shapiro-Wilk test, and discovered that normality is indeed not met (p=2.8E-6) meaning the null hypothesis must be rejected. To formally test for homoskedasticity, I performed a Breusch-Pagan test and homoskedasticity was met and we failed to reject the null hypothesis (p=.24). Next, I recomputed the regression results with robust standard error and it appears that standard error is roughly the same for all groups with tenured being significant.</p>
+<pre class="r"><code>library(lmtest)
+library(sandwich)
+
+Teacher$age_c &lt;- Teacher$age - mean(Teacher$age)
+fit0 &lt;- lm(eval ~ tenure * age_c, data = Teacher)
+summary(fit0)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = eval ~ tenure * age_c, data = Teacher)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -1.83032 -0.35303  0.04081  0.43168  1.06434 
+## 
+## Coefficients:
+##                  Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)      4.154872   0.056326  73.765  &lt; 2e-16 ***
+## tenureyes       -0.196136   0.063347  -3.096  0.00208 ** 
+## age_c           -0.011826   0.007880  -1.501  0.13409    
+## tenureyes:age_c  0.009154   0.008357   1.095  0.27392    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.5501 on 459 degrees of freedom
+## Multiple R-squared:  0.02353,    Adjusted R-squared:  0.01715 
+## F-statistic: 3.687 on 3 and 459 DF,  p-value: 0.01204</code></pre>
+<pre class="r"><code>Teacher %&gt;% select(age, eval, tenure) %&gt;% ggplot(aes(age, eval, 
+    color = tenure)) + geom_point(aes(color = tenure)) + geom_smooth(method = &quot;lm&quot;)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-3-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>resid &lt;- fit0$residuals
+fitval &lt;- fit0$fitted.values
+ggplot() + geom_point(aes(fitval, resid)) + geom_hline(yintercept = 0, 
+    color = &quot;red&quot;)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-3-2.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot() + geom_qq(aes(sample = resid)) + geom_qq_line(aes(sample = resid))</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-3-3.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>shapiro.test(resid)</code></pre>
+<pre><code>## 
+##  Shapiro-Wilk normality test
+## 
+## data:  resid
+## W = 0.97881, p-value = 2.826e-06</code></pre>
+<pre class="r"><code>bptest(fit0)</code></pre>
+<pre><code>## 
+##  studentized Breusch-Pagan test
+## 
+## data:  fit0
+## BP = 4.2068, df = 3, p-value = 0.24</code></pre>
+<pre class="r"><code>coeftest(fit0, vcov = vcovHC(fit0))</code></pre>
+<pre><code>## 
+## t test of coefficients:
+## 
+##                   Estimate Std. Error t value  Pr(&gt;|t|)    
+## (Intercept)      4.1548715  0.0547400 75.9019 &lt; 2.2e-16 ***
+## tenureyes       -0.1961359  0.0620348 -3.1617  0.001672 ** 
+## age_c           -0.0118260  0.0080936 -1.4612  0.144658    
+## tenureyes:age_c  0.0091537  0.0085971  1.0647  0.287556    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>summary(fit0)$coef[, 1:2]</code></pre>
+<pre><code>##                     Estimate  Std. Error
+## (Intercept)      4.154871518 0.056325678
+## tenureyes       -0.196135859 0.063347044
+## age_c           -0.011825956 0.007879757
+## tenureyes:age_c  0.009153672 0.008356554</code></pre>
+<pre class="r"><code>summary(fit0)$r.sq</code></pre>
+<pre><code>## [1] 0.02353127</code></pre>
+<p><strong>4.</strong>
+When comparing the bootstrapped standard errors values to the original standard error and robust error, the bootstrapped values had lower values for all groups.</p>
+<pre class="r"><code>boot &lt;- sample_frac(Teacher, replace = T)
+
+samp &lt;- replicate(5000, {
+    boot &lt;- sample_frac(Teacher, replace = T)
+    nfit &lt;- lm(eval ~ age_c * tenure, data = boot)
+    coef(nfit)
+})
+samp %&gt;% t %&gt;% as.data.frame %&gt;% summarize_all(sd)</code></pre>
+<pre><code>##   (Intercept)       age_c  tenureyes age_c:tenureyes
+## 1  0.05337437 0.008003214 0.06094432     0.008471317</code></pre>
+<p><strong>5.</strong></p>
+<p>A logistic regression models predicted tenure and professor evaluation and tenure and professor age. According to the results, for every one unit increase in evaluation, the odds of tenure go up by 0.537. Furthermore, for every one unit increase in age, the odds of tenure go up by 0.974. It is important to note that none of these results are significant. The confusion matrix results demonstrate that the TPR: 356/361= 0.986, TNR: 4/102= 0.039, PPV: 356/454= 0.784. The AUC is 0.6156 which not the best. The accuracy of the model was 0.778 which is a relatively decent predictor, nothing great.</p>
+<pre class="r"><code>library(tidyverse)
+library(lmtest)
+library(knitr)
+
+logis &lt;- Teacher %&gt;% mutate(y = ifelse(tenure == &quot;yes&quot;, 1, 0))
+Teacher$tenure &lt;- factor(Teacher$tenure, levels = c(&quot;yes&quot;, &quot;no&quot;))
+head(logis)</code></pre>
+<pre><code>## # A tibble: 6 x 15
+##      X1 minority   age gender credits beauty  eval division native tenure
+##   &lt;dbl&gt; &lt;chr&gt;    &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;    &lt;chr&gt;  &lt;chr&gt; 
+## 1     1 yes         36 female more     0.290   4.3 upper    yes    yes   
+## 2     2 no          59 male   more    -0.738   4.5 upper    yes    yes   
+## 3     3 no          51 male   more    -0.572   3.7 upper    yes    yes   
+## 4     4 no          40 female more    -0.678   4.3 upper    yes    yes   
+## 5     5 no          31 female more     1.51    4.4 upper    yes    yes   
+## 6     6 no          62 male   more     0.589   4.2 upper    yes    yes   
+## # … with 5 more variables: students &lt;dbl&gt;, allstudents &lt;dbl&gt;, prof &lt;dbl&gt;,
+## #   age_c &lt;dbl&gt;, y &lt;dbl&gt;</code></pre>
+<pre class="r"><code>fit1 &lt;- glm(y ~ eval + age, data = logis, family = &quot;binomial&quot;)
+exp(coeftest(fit1))</code></pre>
+<pre><code>## 
+## z test of coefficients:
+## 
+##              Estimate Std. Error  z value Pr(&gt;|z|)
+## (Intercept) 162.77031    3.00541 102.2737    1.000
+## eval          0.53657    1.24197   0.0565    1.004
+## age           0.97367    1.01186   0.1039    1.024</code></pre>
+<pre class="r"><code>probs1 &lt;- predict(fit1, type = &quot;link&quot;)
+table(predict = as.numeric(probs1 &gt; 0.5), truth = logis$y) %&gt;% 
+    addmargins</code></pre>
+<pre><code>##        truth
+## predict   0   1 Sum
+##     0     4   5   9
+##     1    98 356 454
+##     Sum 102 361 463</code></pre>
+<pre class="r"><code>class_diag(probs1, logis$y)</code></pre>
+<pre><code>##         acc      sens       spec      ppv       auc
+## 1 0.7775378 0.9861496 0.03921569 0.784141 0.6155695</code></pre>
+<pre class="r"><code>ggplot(logis, aes(x = probs1, color = tenure, fill = tenure)) + 
+    geom_density(alpha = 0.5) + geom_vline(xintercept = 0) + 
+    ggtitle(&quot;Density Plot of Predicted Tenureship&quot;) + xlab(&quot;predictor logit&quot;)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-5-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>library(plotROC)
+ROCplot &lt;- ggplot(fit1) + geom_roc(aes(d = y, m = probs1), n.cuts = 0)
+
+ROCplot</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-5-2.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>calc_auc(ROCplot)</code></pre>
+<pre><code>##   PANEL group       AUC
+## 1     1    -1 0.6155695</code></pre>
+<p><strong>6. (25 pts)</strong></p>
+<p>A logistic regression models predicted professor evaluation, professor age, students, beauty on tenure. According to the results, for every one unit increase in evaluation, the odds of tenure go up by 0.594. Furthermore, for every one unit increase in age, the odds of tenure go up by 0.971 and for every one unit increase in students who took the survey, the odds of tenure go up my 0.99 and for every one unit increase in total student size the odds of tenure go up my 1.02. Lastly, for every one unit increase in beauty rating, the odds of tenure go up by 0.88. It is important to note that none of these results are significant. The confusion matrix results demonstrate that the TPR: 344/361= 0.953, TNR: 11/102= 0.108, PPV: 344/435= 0.791. The AUC is 0.653 which not the best. The accuracy of the model was 0.767 which is a relatively decent predictor, nothing great.</p>
+<p>A LASSO was performed on the model showing that evaluation grades and all-student count were retained. Then a 10 fold CV was performed on the variables selected for by LASSO and eval. The accuracy of the model was 0.83, specificity was 0, and AUC was 0.44.</p>
+<pre class="r"><code>library(glmnet)
+
+logis &lt;- Teacher %&gt;% mutate(y = ifelse(tenure == &quot;yes&quot;, 1, 0))
+Teacher$tenure &lt;- factor(Teacher$tenure, levels = c(&quot;yes&quot;, &quot;no&quot;))
+head(logis)</code></pre>
+<pre><code>## # A tibble: 6 x 15
+##      X1 minority   age gender credits beauty  eval division native tenure
+##   &lt;dbl&gt; &lt;chr&gt;    &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;    &lt;chr&gt;  &lt;fct&gt; 
+## 1     1 yes         36 female more     0.290   4.3 upper    yes    yes   
+## 2     2 no          59 male   more    -0.738   4.5 upper    yes    yes   
+## 3     3 no          51 male   more    -0.572   3.7 upper    yes    yes   
+## 4     4 no          40 female more    -0.678   4.3 upper    yes    yes   
+## 5     5 no          31 female more     1.51    4.4 upper    yes    yes   
+## 6     6 no          62 male   more     0.589   4.2 upper    yes    yes   
+## # … with 5 more variables: students &lt;dbl&gt;, allstudents &lt;dbl&gt;, prof &lt;dbl&gt;,
+## #   age_c &lt;dbl&gt;, y &lt;dbl&gt;</code></pre>
+<pre class="r"><code>fit2 &lt;- glm(y ~ eval + age + students + allstudents + beauty, 
+    data = logis, family = &quot;binomial&quot;)
+exp(coeftest(fit2))</code></pre>
+<pre><code>## 
+## z test of coefficients:
+## 
+##             Estimate Std. Error z value Pr(&gt;|z|)
+## (Intercept) 84.02398    3.17800 46.1686    1.000
+## eval         0.59493    1.24679  0.0950    1.019
+## age          0.97068    1.01303  0.1005    1.022
+## students     0.99132    1.01691  0.5947    1.828
+## allstudents  1.01517    1.01063  4.1540    1.167
+## beauty       0.87563    1.16886  0.4269    1.484</code></pre>
+<pre class="r"><code>probs2 &lt;- predict(fit2, type = &quot;link&quot;)
+table(predict = as.numeric(probs1 &gt; 0.5), truth = logis$y) %&gt;% 
+    addmargins</code></pre>
+<pre><code>##        truth
+## predict   0   1 Sum
+##     0     4   5   9
+##     1    98 356 454
+##     Sum 102 361 463</code></pre>
+<pre class="r"><code>class_diag(probs2, logis$y)</code></pre>
+<pre><code>##         acc      sens      spec       ppv       auc
+## 1 0.7667387 0.9529086 0.1078431 0.7908046 0.6526805</code></pre>
+<pre class="r"><code>ggplot(logis, aes(x = probs2, color = tenure, fill = tenure)) + 
+    geom_density(alpha = 0.5) + geom_vline(xintercept = 0) + 
+    ggtitle(&quot;Density Plot of Predicted Tenureship&quot;) + xlab(&quot;predictor logit&quot;)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-6-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>library(plotROC)
+ROCplot &lt;- ggplot(fit2) + geom_roc(aes(d = y, m = probs2), n.cuts = 0)
+
+ROCplot</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-6-2.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>calc_auc(ROCplot)</code></pre>
+<pre><code>##   PANEL group       AUC
+## 1     1    -1 0.6526805</code></pre>
+<pre class="r"><code>net &lt;- model.matrix(fit2)
+y &lt;- as.matrix(fit2$y)
+x &lt;- as.data.frame(net) %&gt;% dplyr::select(-1) %&gt;% as.matrix
+cv &lt;- cv.glmnet(x, y, family = &quot;binomial&quot;)
+lasso &lt;- glmnet(x, y, family = &quot;binomial&quot;, lambda = cv$lambda.1se)
+
+coef(lasso)</code></pre>
+<pre><code>## 6 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                   s0
+## (Intercept) 1.263905
+## eval        0.000000
+## age         .       
+## students    .       
+## allstudents .       
+## beauty      .</code></pre>
+<pre class="r"><code>set.seed(1234)
+k = 10
+
+dat1 &lt;- logis[sample(nrow(logis)), ]
+folds &lt;- cut(seq(1:nrow(logis)), breaks = k, labels = F)
+diags &lt;- NULL
+for (i in 1:k) {
+    train &lt;- dat1[folds != i, ]
+    test &lt;- dat1[folds == i, ]
+    truth &lt;- test$y
+    fitss &lt;- glm(y ~ eval, data = train, family = binomial(link = &quot;logit&quot;))
+    probab &lt;- predict(fitss, newdata = test, type = &quot;response&quot;)
+    diagn &lt;- rbind(diags, class_diag(probab, truth))
+}
+
+summarize_all(diagn, mean)</code></pre>
+<pre><code>##         acc sens spec       ppv       auc
+## 1 0.8297872    1    0 0.8297872 0.4407051</code></pre>
+<p>Note that the <code>echo = FALSE</code> parameter was added to the code chunk to prevent printing of the R code that generated the plot.</p>
+</div>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../js/docs.min.js"></script>
+<script src="../../js/main.js"></script>
+
+<script src="../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

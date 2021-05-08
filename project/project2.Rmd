@@ -1,0 +1,256 @@
+---
+title: "Project 2"
+author: "Jessica Selim"
+date: "5/4/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F,
+tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
+```
+
+```{r}
+#LEAVE THIS CHUNK ALONE!
+library(knitr)
+opts_chunk$set(fig.align="center", fig.height=5, message=FALSE, warning=FALSE, fig.width=8, tidy.opts=list(width.cutoff=60),tidy=TRUE)
+
+class_diag<-function(probs,truth){
+  
+  tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),truth)
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[2,2]/colSums(tab)[2]
+  spec=tab[1,1]/colSums(tab)[1]
+  ppv=tab[2,2]/rowSums(tab)[2]
+
+  if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE) truth<-as.numeric(truth)-1
+  
+  #CALCULATE EXACT AUC
+  ord<-order(probs, decreasing=TRUE)
+  probs <- probs[ord]; truth <- truth[ord]
+  
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  
+  dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+  TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+  
+  n <- length(TPR)
+  auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+  data.frame(acc,sens,spec,ppv,auc)
+}
+```
+
+## Project 2
+
+**0.**
+The first dataset I chose measured the impact of beauty on a professor's teaching ratings at the University of Texas at Austin from the academic years of 2000-2002. This dataset measured a total of 463 courses and indicated the professor's gender, age, whether they are a minority or native English speaker, beauty rating, tenure and division. The course was identified by its credits, students in the evaltuation and total number of students. The purpose of this dataset is to evaluate the correlation, if any, between a professor's evaluation by their student's to ther beauty, gender, age and minority status. 
+
+I chose these data-sets because I thought it was very interesting. As a senior at UT, I have seen some correlation between student's perspective of a professor and their perceived attractiveness. More so, I plan on becoming a professor one day and I think it might be interesting to see how i may be perceieved by my students based on my gender, age and general attractiveness. 
+
+```{r cars}
+library(tidyverse)
+Teacher <- read_csv("~/TeachingRatings.csv")
+glimpse(Teacher)
+
+```
+
+
+**1.**
+After running a MANOVA test to see of a professor's beauty rating and course evaluation is different across the teacher's gender, the results demonstrated that there is a significant effect (p=1.56e-05). This indicates that for at least beauty and evaluation, they are different with one gender from the other. Since we found a significant effect, an univariate ANOVA was conducted and determined that for for both beauty and evaluation, there were differences for gender (beauty p=0.0068, eval p=0.0012). Next, follow up t-tests were conducted and found a p value of 0.006 for genders for beauty and a p value of 0.0012 for evaluation. 
+
+At the end of the MANOVA testing, I performed a total of 5 tests (2 t-tests, 2 ANOVAS and 1 MANOVA). According to my tests, the probability of at least 1 type I error should be 1-0.95^5= 0.226, however, once it is adjusted to equal 0.05/5 it is 0.01, which is significant. Despite the results being significant, it is important to take note that several MANOVA assumptions were likely violated in order to conduct this test. For instance, examination of bivariate density plots for each group revealed that my response variables are not multivariate normal thus indicating that we did not meet the assumption. 
+
+
+```{r pressure, echo=FALSE}
+
+#Testing multi-variant assumption
+ggplot(Teacher, aes(x = eval, y = beauty)) +  geom_point(alpha = .5) + geom_density_2d(h=2) + coord_fixed() + facet_wrap(~gender)
+
+library(rstatix)
+group <- Teacher$gender 
+DVs <- Teacher %>% select(beauty,eval)                                                                                                           
+sapply(split(DVs,group), mshapiro_test)
+
+#MANOVA Test
+man1<-manova(cbind(beauty,eval)~gender, data=Teacher)
+summary(man1)
+
+#ANOVA Test
+summary.aov(man1)
+
+#post hoc tests
+pairwise.t.test(Teacher$beauty, Teacher$gender, p.adj = "none")
+pairwise.t.test(Teacher$eval, Teacher$gender, p.adj = "none")
+
+1-.95^5
+.05/5
+
+```
+
+ **2.** 
+ For this project, I conducted a randomization test to see whether or not there was a difference in mean beauty rating between minority (n=64) or Caucasian (n=399) professors. 
+
+Ho= mean beauty rating is the same for minority vs. caucasion professor
+Ha= mean beauty rating is the different for minority vs. caucasion professor
+
+A randomization test of 5000 random permutations, we sampled at random from that set of permutations and so that our results are equivalent. P-value 0.4764 was computed signifying that the null hypothesis cannot be rejected indicating that the mean beauty rating is indeed same for minority and caucasian professors. 
+
+```{r}
+table(Teacher$minority)
+
+race1 <- Teacher %>% group_by(minority) %>% summarize(means = mean(beauty)) %>% summarize(mean_diff = diff(means))
+race1
+
+rand_1 <- vector()
+for (i in 1:5000) {
+    new <- data.frame(beauty = sample(Teacher$beauty), minority=Teacher$minority)
+    rand_1[i] <- mean(new[new$minority == "yes", 
+        ]$beauty) - mean(new[new$minority == "no", ]$beauty)}
+{hist(rand_1, main = "", ylab = "")
+    abline(v = c(-0.07546074, 0.0754607), col = "red")}
+mean(rand_1 > 0.07546074 | rand_1 < -0.07546074)
+```
+
+
+**3.** 
+
+In order to build a linear regression model predicting course evaluation rating from the interaction of age and tenureship, the numeric variable age was mean-centered. According to the results, the mean predicted evaluation score for non-tenured professor's with average age is 4.15. Tenured professors with averaged age ha a predicted evaluation score that is 0.196 points lower than non-tenured professors. Furthermore, for every 1-unit increase in age, predicted evaluation goes down by 0.01 points. Slope of age on evaluation for tenured is 0.009 greater than for non-tenured. Lastly, 0.024 of the variance is explained by the model. 
+
+When testing for linearity and homoskedsaticity with ggplot of residual value to fitted value, the graph did not show anything too alarming. Furthermore, when tested for normality through a qqplot, my data seems relatively normal with some deviance around the top of the graph. I wanted to extra insurance of formally testing the normality through the Shapiro-Wilk test, and discovered that normality is indeed not met (p=2.8E-6) meaning the null hypothesis must be rejected. To formally test for homoskedasticity, I performed a Breusch-Pagan test and homoskedasticity was met and we failed to reject the null hypothesis (p=.24). Next, I recomputed the regression results with robust standard error and it appears that standard error is roughly the same for all groups with tenured being significant. 
+
+```{r}
+library(lmtest)
+library(sandwich)
+
+Teacher$age_c <- Teacher$age - mean(Teacher$age)
+fit0<-lm(eval ~ tenure*age_c, data=Teacher)
+summary(fit0)
+
+Teacher %>% select(age, eval, tenure) %>% ggplot(aes(age, eval, color=tenure)) + geom_point(aes(color=tenure))+geom_smooth(method="lm") 
+
+resid <- fit0$residuals
+fitval <-fit0$fitted.values
+ggplot() + geom_point(aes(fitval, resid)) + geom_hline(yintercept = 0, color = "red")
+ggplot() + geom_qq(aes(sample = resid))+ geom_qq_line(aes(sample=resid))
+
+shapiro.test(resid)
+bptest(fit0)
+coeftest(fit0, vcov=vcovHC(fit0))
+summary(fit0)$coef[,1:2]
+summary(fit0)$r.sq
+
+
+```
+
+
+
+ **4.** 
+ When comparing the bootstrapped standard errors values to the original standard error and robust error, the bootstrapped values had lower values for all groups. 
+
+```{r}
+boot<- sample_frac(Teacher, replace=T)
+
+samp<-replicate(5000, {  
+  boot <- sample_frac(Teacher, replace=T)  
+  nfit <- lm(eval~age_c*tenure, data=boot)  
+  coef(nfit) 
+  }) 
+samp %>% t %>% as.data.frame %>% summarize_all(sd)
+
+```
+
+**5.** 
+    
+A logistic regression models predicted tenure and professor evaluation and tenure and professor age. According to the results, for every one unit increase in evaluation, the odds of tenure go up by 0.537. Furthermore, for every one unit increase in age, the odds of tenure go up by 0.974. It is important to note that none of these results are significant. The confusion matrix results demonstrate that the TPR: 356/361= 0.986, TNR: 4/102= 0.039, PPV: 356/454= 0.784. The AUC is 0.6156 which not the best. The accuracy of the model was 0.778 which is a relatively decent predictor, nothing great. 
+
+
+```{r}
+library(tidyverse)
+library(lmtest)
+library(knitr)
+
+logis<-Teacher%>%mutate(y=ifelse(tenure=="yes",1,0))
+Teacher$tenure <- factor(Teacher$tenure, levels=c("yes", "no"))
+head(logis)
+
+fit1<-glm(y~eval+age, data=logis, family="binomial")
+exp(coeftest(fit1))
+
+probs1<-predict(fit1,type="link")
+table(predict=as.numeric(probs1>.5),truth=logis$y)%>%addmargins
+
+class_diag(probs1,logis$y)
+
+ggplot(logis, aes(x=probs1, color=tenure, fill=tenure)) + geom_density(alpha=.5) + geom_vline(xintercept=0)+ggtitle("Density Plot of Predicted Tenureship")+xlab("predictor logit")
+
+library(plotROC)
+ROCplot <- ggplot(fit1) + geom_roc(aes(d = y, m = probs1), 
+    n.cuts = 0)
+
+ROCplot
+
+calc_auc(ROCplot)
+```
+
+**6. (25 pts)** 
+
+A logistic regression models predicted professor evaluation, professor age, students, beauty on tenure. According to the results, for every one unit increase in evaluation, the odds of tenure go up by 0.594. Furthermore, for every one unit increase in age, the odds of tenure go up by 0.971 and for every one unit increase in students who took the survey, the odds of tenure go up my 0.99 and for every one unit increase in total student size the odds of tenure go up my 1.02. Lastly, for every one unit increase in beauty rating, the odds of tenure go up by 0.88. It is important to note that none of these results are significant. The confusion matrix results demonstrate that the TPR: 344/361= 0.953, TNR: 11/102= 0.108, PPV: 344/435= 0.791. The AUC is 0.653 which not the best. The accuracy of the model was 0.767 which is a relatively decent predictor, nothing great. 
+
+A LASSO was performed on the model showing that evaluation grades and all-student count were retained. Then a 10 fold CV was performed on the variables selected for by LASSO and eval. The accuracy of the model was 0.83, specificity was 0, and AUC was 0.44.
+
+```{r}
+library(glmnet)
+
+logis<-Teacher%>%mutate(y=ifelse(tenure=="yes",1,0))
+Teacher$tenure <- factor(Teacher$tenure, levels=c("yes", "no"))
+head(logis)
+
+fit2<-glm(y~eval+age+students+allstudents+beauty, data=logis, family="binomial")
+exp(coeftest(fit2))
+
+probs2<-predict(fit2,type="link")
+table(predict=as.numeric(probs1>.5),truth=logis$y)%>%addmargins
+
+class_diag(probs2,logis$y)
+
+ggplot(logis, aes(x=probs2, color=tenure, fill=tenure)) + geom_density(alpha=.5) + geom_vline(xintercept=0)+ggtitle("Density Plot of Predicted Tenureship")+xlab("predictor logit")
+
+library(plotROC)
+ROCplot <- ggplot(fit2) + geom_roc(aes(d = y, m = probs2), 
+    n.cuts = 0)
+
+ROCplot
+
+calc_auc(ROCplot)
+
+net<-model.matrix(fit2)
+y<-as.matrix(fit2$y)
+x<-as.data.frame(net) %>% dplyr::select(-1) %>% as.matrix
+cv<-cv.glmnet(x,y, family = "binomial")
+lasso<-glmnet(x,y, family = "binomial",lambda=cv$lambda.1se)
+
+coef(lasso)
+
+set.seed(1234)
+k=10 
+
+dat1<-logis[sample(nrow(logis)),]
+folds<-cut(seq(1:nrow(logis)),breaks=k,labels=F)
+diags<-NULL
+for(i in 1:k){
+ train<-dat1[folds!=i,]
+ test<-dat1[folds==i,]
+ truth<-test$y
+ fitss<-glm(y~eval, data = train, family = binomial(link="logit"))
+ probab<-predict(fitss,newdata = test,type="response")
+ diagn<-rbind(diags,class_diag(probab,truth))
+}
+
+summarize_all(diagn,mean)
+```
+
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

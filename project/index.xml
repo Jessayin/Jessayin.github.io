@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Projects on Jessica Selim</title>
+    <link>/project/</link>
+    <description>Recent content in Projects on Jessica Selim</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language><atom:link href="/project/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Project 1</title>
+      <link>/project/project1/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project1/</guid>
+      <description>Project 1 The first data-set I chose was about the gun murder rate and gun ownership rate per the population in different states. This dataset explains how many homocides occur due to gun violence and compares it to the proportion of gun ownership in that state to understand if regal gun ownership has a correlation with the violence. The second data-set about the states in terms of state region, population number, Verbal SAT score, Math SAT score and percent of SAT takers and the amount of money the education system receives and the average pay of high school teachers.</description>
+    </item>
+    
+    <item>
+      <title>Project 2</title>
+      <link>/project/project2/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project2/</guid>
+      <description># LEAVE THIS CHUNK ALONE! library(knitr) opts_chunk$set(fig.align = &amp;quot;center&amp;quot;, fig.height = 5, message = FALSE, warning = FALSE, fig.width = 8, tidy.opts = list(width.cutoff = 60), tidy = TRUE) class_diag &amp;lt;- function(probs, truth) { tab &amp;lt;- table(factor(probs &amp;gt; 0.5, levels = c(&amp;quot;FALSE&amp;quot;, &amp;quot;TRUE&amp;quot;)), truth) acc = sum(diag(tab))/sum(tab) sens = tab[2, 2]/colSums(tab)[2] spec = tab[1, 1]/colSums(tab)[1] ppv = tab[2, 2]/rowSums(tab)[2] if (is.numeric(truth) == FALSE &amp;amp; is.logical(truth) == FALSE) truth &amp;lt;- as.</description>
+    </item>
+    
+  </channel>
+</rss>

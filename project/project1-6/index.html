@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Jessica Selim" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
+    <title>Project 1</title>
+    <meta name="generator" content="Hugo 0.83.1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../post/">BLOG</a></li>
+        
+        <li><a href="../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../project/project1-6/">Project 1</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         January 1, 0001 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<div id="project-1" class="section level2">
+<h2>Project 1</h2>
+<p>The first data-set I chose was about the gun murder rate and gun ownership rate per the population in different states. This dataset explains how many homocides occur due to gun violence and compares it to the proportion of gun ownership in that state to understand if regal gun ownership has a correlation with the violence. The second data-set about the states in terms of state region, population number, Verbal SAT score, Math SAT score and percent of SAT takers and the amount of money the education system receives and the average pay of high school teachers. This data-set displays the relationships between the money in education and its faculty and resulting score/success of their students.</p>
+<p>I chose these data-sets because I wanted to understand if there was a relationship between gun violence and education pay and average student success of a state. This data-set entailed all those components and the topic of gun reform is such a hot debate that it seemed like an interesting project to work on.</p>
+<pre class="r"><code>library(tidyverse)
+Gun &lt;- read_csv(&quot;~/gun_violence_us.csv&quot;)
+States &lt;- read_csv(&quot;~/Book3.csv&quot;)</code></pre>
+<p>For the data-sets, I used left-join to join the data-sets. I decided on left join because I wanted to keep all my data-sets for “Gun” and remove the excess data points in “States” that is not in Gun. With this merge, I lost “CN” and “DC” because neither of the two were in the Gun data-set but were in States and this merge kept me from having uncollected data.</p>
+<pre><code>## [1] &quot;CN&quot; &quot;DC&quot;</code></pre>
+<p>The mean, standard deviation, maximum value, minimum value and distinct values for every numeric variable for GOR, GMR, ESpending, AvgSalary, PSAT, VSAT, LSAT, MSAt and population all over America was calculated using summarize_all(). After deselecting state and region, the mean, standard deviation, minimum, median and maximum values of all variables were calculated. Then, the dataset was tidied by separating every numeric category from their respective calculations and then pivoted widely to display it all in a easily legible manner. Then, using the mutate function, variance was created via squaring the Sd value. Lastly, they were arranged in descending order by mean variance. This data-set gives a good picture of the Gun rates and the education data for all of America.</p>
+<p>Next, grouping the data by region and deselecting state, the same mean, standard deviation, minimum, median and maximum values of all variables were calculated via summarize_all. After tidying the data and arranging via descending GMR_Mean. From this dataset, each region’s stats can be displayed and based on the ascending order, it can be seen that region ESC has the highest GMR average. Lastly, using the results from the previous set, I grouped the data by state and region and filtered out for ESC region and found the same mean, standard deviation, minimum, median and maximum values of all variables and arranged by ascending GMR_max and found that MS has the highest GMR value at 18. I did the same thing to see the trend with average salary and AR seemed to have had the lowest avgerage salary.</p>
+<pre class="r"><code>Fdata %&gt;% select(-&quot;state&quot;, -&quot;region&quot;) %&gt;% summarise_all(list(Min = min, 
+    Mean = mean, Max = max, Sd = sd, Median = median)) %&gt;% pivot_longer(contains(&quot;_&quot;)) %&gt;% 
+    separate(name, into = c(&quot;Category&quot;, &quot;Statistics&quot;)) %&gt;% pivot_wider(names_from = &quot;Statistics&quot;, 
+    values_from = &quot;value&quot;) %&gt;% mutate(Variance = Sd^2) %&gt;% arrange(Variance)</code></pre>
+<pre><code>## # A tibble: 8 x 7
+##   Category       Min     Mean       Max       Sd   Median      Variance
+##   &lt;chr&gt;        &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;         &lt;dbl&gt;
+## 1 GOR          0.052    0.331     0.617    0.135    0.322        0.0183
+## 2 ESpending    2.99     5.07      9.16     1.26     5.03         1.59  
+## 3 GMR          2.6     11.4      18.9      4.09    11.4         16.7   
+## 4 AvgSalary   22       30.8      45        5.34    30           28.5   
+## 5 PSAT         4       32.7      72       23.3     24.5        542.    
+## 6 VSAT       397      449.      511       30.6    444          938.    
+## 7 MSAT       437      498.      577       34.3    494.        1175.    
+## 8 Population 454     4998.    29760     5454.    3576     29750975.</code></pre>
+<pre class="r"><code>Fdata %&gt;% group_by(region) %&gt;% select(-&quot;state&quot;) %&gt;% summarise_all(list(Min = min, 
+    Mean = mean, Max = max, Sd = sd, Median = median)) %&gt;% pivot_longer(contains(&quot;_&quot;)) %&gt;% 
+    pivot_wider(names_from = &quot;name&quot;, values_from = &quot;value&quot;) %&gt;% 
+    arrange(-GMR_Mean)</code></pre>
+<pre><code>## # A tibble: 9 x 41
+##   region GMR_Min GOR_Min Population_Min VSAT_Min MSAT_Min PSAT_Min ESpending_Min
+##   &lt;chr&gt;    &lt;dbl&gt;   &lt;dbl&gt;          &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;         &lt;dbl&gt;
+## 1 ESC       13.8   0.394           2573      470      514        4          3.32
+## 2 WSC       10.6   0.312           2351      413      461        6          3.33
+## 3 MTN       12.1   0.319            454      434      487        5          2.99
+## 4 SA         9     0.052            666      397      437       15          4.33
+## 5 WNC        6.6   0.198            639      473      522        5          3.68
+## 6 ENC        8.2   0.196           4892      408      459       11          5.05
+## 7 PAC        2.6   0.201            550      404      476       42          4.83
+## 8 MA         4.2   0.103           7730      412      463       64          6.53
+## 9 NE         2.9   0.058            563      422      456       54          5.50
+## # … with 33 more variables: AvgSalary_Min &lt;dbl&gt;, GMR_Mean &lt;dbl&gt;,
+## #   GOR_Mean &lt;dbl&gt;, Population_Mean &lt;dbl&gt;, VSAT_Mean &lt;dbl&gt;, MSAT_Mean &lt;dbl&gt;,
+## #   PSAT_Mean &lt;dbl&gt;, ESpending_Mean &lt;dbl&gt;, AvgSalary_Mean &lt;dbl&gt;, GMR_Max &lt;dbl&gt;,
+## #   GOR_Max &lt;dbl&gt;, Population_Max &lt;dbl&gt;, VSAT_Max &lt;dbl&gt;, MSAT_Max &lt;dbl&gt;,
+## #   PSAT_Max &lt;dbl&gt;, ESpending_Max &lt;dbl&gt;, AvgSalary_Max &lt;dbl&gt;, GMR_Sd &lt;dbl&gt;,
+## #   GOR_Sd &lt;dbl&gt;, Population_Sd &lt;dbl&gt;, VSAT_Sd &lt;dbl&gt;, MSAT_Sd &lt;dbl&gt;,
+## #   PSAT_Sd &lt;dbl&gt;, ESpending_Sd &lt;dbl&gt;, AvgSalary_Sd &lt;dbl&gt;, GMR_Median &lt;dbl&gt;,
+## #   GOR_Median &lt;dbl&gt;, Population_Median &lt;dbl&gt;, VSAT_Median &lt;dbl&gt;,
+## #   MSAT_Median &lt;dbl&gt;, PSAT_Median &lt;dbl&gt;, ESpending_Median &lt;dbl&gt;,
+## #   AvgSalary_Median &lt;dbl&gt;</code></pre>
+<pre class="r"><code>Fdata %&gt;% group_by(region) %&gt;% group_by(state) %&gt;% filter(region == 
+    &quot;ESC&quot;) %&gt;% summarise_all(list(Max = max, Mean = mean, Min = min, 
+    Sd = sd, Median = median)) %&gt;% arrange(-GMR_Max) %&gt;% select(1:10)</code></pre>
+<pre><code>## # A tibble: 4 x 10
+##   state GMR_Max GOR_Max region_Max Population_Max VSAT_Max MSAT_Max PSAT_Max
+##   &lt;chr&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;               &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1 MS       18     0.428 ESC                  2573      477      519        4
+## 2 AL       16.7   0.489 ESC                  4041      470      514        8
+## 3 TN       14.7   0.394 ESC                  4877      483      525       12
+## 4 KY       13.8   0.424 ESC                  3685      473      521       10
+## # … with 2 more variables: ESpending_Max &lt;dbl&gt;, AvgSalary_Max &lt;dbl&gt;</code></pre>
+<pre class="r"><code>Fdata %&gt;% group_by(region) %&gt;% select(-&quot;state&quot;) %&gt;% summarise_all(list(Min = min, 
+    Mean = mean, Max = max, Sd = sd, Median = median)) %&gt;% pivot_longer(contains(&quot;_&quot;)) %&gt;% 
+    pivot_wider(names_from = &quot;name&quot;, values_from = &quot;value&quot;) %&gt;% 
+    arrange(AvgSalary_Mean)</code></pre>
+<pre><code>## # A tibble: 9 x 41
+##   region GMR_Min GOR_Min Population_Min VSAT_Min MSAT_Min PSAT_Min ESpending_Min
+##   &lt;chr&gt;    &lt;dbl&gt;   &lt;dbl&gt;          &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;         &lt;dbl&gt;
+## 1 WSC       10.6   0.312           2351      413      461        6          3.33
+## 2 ESC       13.8   0.394           2573      470      514        4          3.32
+## 3 WNC        6.6   0.198            639      473      522        5          3.68
+## 4 MTN       12.1   0.319            454      434      487        5          2.99
+## 5 SA         9     0.052            666      397      437       15          4.33
+## 6 ENC        8.2   0.196           4892      408      459       11          5.05
+## 7 NE         2.9   0.058            563      422      456       54          5.50
+## 8 PAC        2.6   0.201            550      404      476       42          4.83
+## 9 MA         4.2   0.103           7730      412      463       64          6.53
+## # … with 33 more variables: AvgSalary_Min &lt;dbl&gt;, GMR_Mean &lt;dbl&gt;,
+## #   GOR_Mean &lt;dbl&gt;, Population_Mean &lt;dbl&gt;, VSAT_Mean &lt;dbl&gt;, MSAT_Mean &lt;dbl&gt;,
+## #   PSAT_Mean &lt;dbl&gt;, ESpending_Mean &lt;dbl&gt;, AvgSalary_Mean &lt;dbl&gt;, GMR_Max &lt;dbl&gt;,
+## #   GOR_Max &lt;dbl&gt;, Population_Max &lt;dbl&gt;, VSAT_Max &lt;dbl&gt;, MSAT_Max &lt;dbl&gt;,
+## #   PSAT_Max &lt;dbl&gt;, ESpending_Max &lt;dbl&gt;, AvgSalary_Max &lt;dbl&gt;, GMR_Sd &lt;dbl&gt;,
+## #   GOR_Sd &lt;dbl&gt;, Population_Sd &lt;dbl&gt;, VSAT_Sd &lt;dbl&gt;, MSAT_Sd &lt;dbl&gt;,
+## #   PSAT_Sd &lt;dbl&gt;, ESpending_Sd &lt;dbl&gt;, AvgSalary_Sd &lt;dbl&gt;, GMR_Median &lt;dbl&gt;,
+## #   GOR_Median &lt;dbl&gt;, Population_Median &lt;dbl&gt;, VSAT_Median &lt;dbl&gt;,
+## #   MSAT_Median &lt;dbl&gt;, PSAT_Median &lt;dbl&gt;, ESpending_Median &lt;dbl&gt;,
+## #   AvgSalary_Median &lt;dbl&gt;</code></pre>
+<pre class="r"><code>Fdata %&gt;% group_by(region) %&gt;% group_by(state) %&gt;% filter(region == 
+    &quot;WSC&quot;) %&gt;% summarise_all(list(Max = max, Mean = mean, Min = min, 
+    Sd = sd, Median = median)) %&gt;% arrange(AvgSalary_Min) %&gt;% 
+    select(1:10)</code></pre>
+<pre><code>## # A tibble: 4 x 10
+##   state GMR_Max GOR_Max region_Max Population_Max VSAT_Max MSAT_Max PSAT_Max
+##   &lt;chr&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;               &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1 AR       16.4   0.579 WSC                  2351      470      511        6
+## 2 OK       15.6   0.312 WSC                  3146      478      523        9
+## 3 LA       18.9   0.445 WSC                  4220      476      517        9
+## 4 TX       10.6   0.357 WSC                 16987      413      461       42
+## # … with 2 more variables: ESpending_Max &lt;dbl&gt;, AvgSalary_Max &lt;dbl&gt;</code></pre>
+<p>Three separate plots were created. Plot 1 was the heat plot that demonstrated areas of high clustering between the variables. In this case, the most interesting clusterings was the heavy clustering between VSAT and MSAT. Mostly everything else ranged around the -0.4 to -0.5 region. The next plot showed the average spending and state grouped off my region. In this plot, more of the highest averaging salaries were seen in region MA with the highest being in NJ. The lowest is trending around region WSC or MTN with the lowest being in UT. Lastly, a plot of relationship of gun murder rate and average salary grouped off by region was created. This plot demonstrated a rather variable positive and negative relationship throughout various regions. This was rather interesting because I was expecting to see an undeniable downward trend of average salary with an upward trend of Gun Murder Rate. The same plot for gun murder rate and Math Sat scores showed the same variable positive and negative trend but for the most part it seemed relatively stagnant across gun violence.</p>
+<pre class="r"><code>Fdata %&gt;% select_if(is.numeric) %&gt;% cor(use = &quot;complete.obs&quot;) %&gt;% 
+    as.data.frame %&gt;% rownames_to_column %&gt;% pivot_longer(-1) %&gt;% 
+    ggplot(aes(rowname, name, fill = value)) + geom_tile() + 
+    geom_text(aes(label = round(value, 2))) + xlab(&quot;&quot;) + ylab(&quot;&quot;) + 
+    coord_fixed() + scale_fill_gradient2(low = &quot;light blue&quot;, 
+    mid = &quot;light pink&quot;, high = &quot;light green&quot;) + theme(axis.text.x = element_text(size = 7, 
+    angle = 90))</code></pre>
+<p><img src="../../project/project1-6_files/figure-html/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(Fdata, aes(x = state, y = ESpending, fill = region)) + 
+    geom_bar(position = &quot;dodge&quot;, stat = &quot;summary&quot;, fun = &quot;mean&quot;) + 
+    scale_y_continuous(&quot;Average Educational Spending&quot;, breaks = seq(0, 
+        150, 55)) + xlab(&quot;State&quot;) + theme(axis.text.x = element_text(size = 10, 
+    angle = 90)) + ggtitle(&quot;Average Educational Spending per Region&quot;) + 
+    geom_errorbar(stat = &quot;summary&quot;, fun.data = mean_se, width = 1) + 
+    scale_fill_brewer(palette = &quot;Set3&quot;)</code></pre>
+<p><img src="../../project/project1-6_files/figure-html/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(data = Fdata, aes(x = GMR, y = AvgSalary)) + geom_point(aes(color = region)) + 
+    ggtitle(&quot;The Gun murder rate of regions and Avg Teacher Salary&quot;) + 
+    ylab(&quot;Avg Salary&quot;) + xlab(&quot;Gun Murder Rate&quot;) + geom_smooth(method = &quot;lm&quot;, 
+    aes(color = region)) + scale_fill_brewer(palette = &quot;Set3&quot;)</code></pre>
+<p><img src="../../project/project1-6_files/figure-html/unnamed-chunk-2-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(data = Fdata, aes(x = GMR, y = MSAT)) + geom_point(aes(color = region)) + 
+    ggtitle(&quot;The Gun murder rate of regions and Math SAT&quot;) + 
+    ylab(&quot;Math SAT&quot;) + xlab(&quot;Gun Murder Rate&quot;) + geom_smooth(method = &quot;lm&quot;, 
+    aes(color = region)) + scale_fill_brewer(palette = &quot;Set3&quot;)</code></pre>
+<p><img src="../../project/project1-6_files/figure-html/unnamed-chunk-2-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>PCA1 and PCA2 do not seem to be separate from one another based on region according to the plot of PC scores. It seems as though almost all of the regions are relatively intertwined with one another. Even with the clustering plot there was a 73.8% variability explanation. Outside of the population clusering of every category, all the distributions seemed to be fairly evenly spread across the board.</p>
+<pre class="r"><code>library(cluster)
+library(GGally)
+
+pam1 &lt;- Fdata %&gt;% select(-state, -region) %&gt;% pam(k = 10)
+head(pam1)</code></pre>
+<pre><code>## $medoids
+##        GMR   GOR Population VSAT MSAT PSAT ESpending AvgSalary
+##  [1,] 13.4 0.323       3665  445  497   25     4.231        30
+##  [2,] 15.8 0.523        799  464  523   20     5.184        26
+##  [3,] 18.0 0.428       2573  477  519    4     3.322        24
+##  [4,]  7.4 0.201      29760  419  484   45     4.826        39
+##  [5,] 14.7 0.394       4877  483  525   12     3.707        28
+##  [6,] 10.5 0.271      11882  420  463   64     6.534        36
+##  [7,] 13.7 0.316       6478  401  443   57     4.860        29
+##  [8,] 15.8 0.499       1515  480  527   12     4.446        26
+##  [9,] 11.1 0.288       9295  454  514   12     5.257        38
+## [10,] 10.6 0.357      16987  413  461   42     4.238        28
+## 
+## $id.med
+##  [1]  3 26 24  5 42 38 10 31 22 43
+## 
+## $clustering
+##  [1]  1  2  1  3  4  1  5  2  6  7  2  2  6  5  3  3  1  1  8  5  7  9  5  3  5
+## [26]  2  8  8  2  7  8 10  7  2  6  1  3  6  2  1  2  5 10  8  2  7  5  8  5  2
+## 
+## $objective
+##    build     swap 
+## 329.3861 280.3647 
+## 
+## $isolation
+##  1  2  3  4  5  6  7  8  9 10 
+## no no no no no no no no no L* 
+## Levels: no L L*
+## 
+## $clusinfo
+##       size  max_diss  av_diss  diameter separation
+##  [1,]    7  556.4965 295.3211 1074.0256   157.7271
+##  [2,]   11  345.1594 214.2524  658.6240   102.9667
+##  [3,]    5  277.7816 163.2292  494.6989   311.6723
+##  [4,]    1    0.0000   0.0000    0.0000 11770.0383
+##  [5,]    8  675.7644 234.9042 1174.6678   157.7271
+##  [6,]    4 1056.2139 638.4068 2091.6223  1552.1217
+##  [7,]    5 1252.6001 432.2093 1714.0310   473.0386
+##  [8,]    6  319.1649 196.7668  591.1754   102.9667
+##  [9,]    1    0.0000   0.0000    0.0000  1552.1217
+## [10,]    2 1003.5588 501.7794 1003.5588  4049.0074</code></pre>
+<pre class="r"><code>plot(pam1, which = 1)</code></pre>
+<p><img src="../../project/project1-6_files/figure-html/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>eig &lt;- Fdata %&gt;% select(-region, -state) %&gt;% cor(use = &quot;complete.obs&quot;) %&gt;% 
+    eigen()
+
+PCA &lt;- Fdata %&gt;% select(-region, -state) %&gt;% scale() %*% eig$vectors
+Fdata %&gt;% mutate(PC1 = PCA[, 1], PC2 = PCA[, 2]) %&gt;% ggplot(aes(PC1, 
+    PC2, color = region)) + geom_point() + coord_fixed()</code></pre>
+<p><img src="../../project/project1-6_files/figure-html/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Note that the <code>echo = FALSE</code> parameter was added to the code chunk to prevent printing of the R code that generated the plot.</p>
+</div>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../js/docs.min.js"></script>
+<script src="../../js/main.js"></script>
+
+<script src="../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>
